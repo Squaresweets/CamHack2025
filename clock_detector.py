@@ -34,10 +34,12 @@ class ClockDetector:
         #cv2.waitKey(0)
 
     @staticmethod
-    def identify_clocks(image):
+    def identify_clocks(_image):
         MIN_AREA = 10
-        if image is None:
+        if _image is None:
             raise ValueError("Invalid image provided.")
+
+        image = cv2.cvtColor(np.array(_image), cv2.COLOR_RGB2BGR)
 
         # Convert to HSV color space
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)

@@ -96,7 +96,11 @@ class Bot:
         for p in self.state.clock_positions:
             if p in self.previous_clock_positions:
                 continue
-            self.incoming_message_queue.append(ENEMY_TILES.indexof((p.tile_x, p.tile_y)))
+            if (p.tile_x, p.tile_y) not in ENEMY_TILES:
+                print("Found invalid clock at: "+str(p.tile_x)+" "+str(p.tile_y))
+                continue
+            self.incoming_message_queue.append(ENEMY_TILES.index((p.tile_x, p.tile_y)))
+
         self.previous_clock_positions = self.state.clock_positions.copy()
         
     def enqueue_data(self, new_data):
