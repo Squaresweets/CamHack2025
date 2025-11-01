@@ -6,7 +6,7 @@ import requests
 from constants import *
 from detector import Detector
 from emulator import Emulator
-from basenstreamer import baseNBinaryStreamer
+from basenstreamer import baseNBinaryStreamer, to_base_n
 from message_handler import char_map
 
 pause_event = threading.Event()
@@ -19,6 +19,7 @@ class Bot:
     is_paused_logged = False
     is_resumed_logged = True
     streamer : baseNBinaryStreamer
+    emote_queue = []
 
     def __init__(self):
         self.message_queue = []
@@ -94,6 +95,18 @@ class Bot:
                     res = requests.get(url)
                 except Exception as e:
                     print("Error:", e)
+
+
+        res = requests.get("http://127.0.0.1:5000/check_new_message")
+        if res.new_data:
+            binary =""
+            for c in res.message:
+                val = list(char_map.keys())[list(char_map.values()).index(c)]
+                bits = bin(val)[2:].zfill(5)
+                binary += bits
+        
+            self.emote_queue.extend(to_base_n(int(binary, 2), 224))
+
 
         
 
