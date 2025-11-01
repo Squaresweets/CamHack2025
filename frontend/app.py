@@ -61,7 +61,7 @@ def check_for_updates():
 def check_new_message():
     global latest_message
     if latest_message:
-        data = latest_message
+        data = latest_message + "]"  
         latest_message = None  # clear after sending (optional)
         return jsonify(new_data=True, message=data)
     return jsonify(new_data=False)
