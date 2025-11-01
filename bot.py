@@ -1,6 +1,7 @@
 import random
 import threading
 import time
+import requests
 
 from constants import *
 from detector import Detector
@@ -83,6 +84,17 @@ class Bot:
         self.set_state()
         self._handle_game_step()
         self.decode_clock_positions()
+
+        str = self.fetch_received_data()
+        if str != "":
+            BASE_URL = "http://127.0.0.1:5000/newchar" 
+            for char in str:
+                url = f"{BASE_URL}/{char}"
+                try:
+                    res = requests.get(url)
+                except Exception as e:
+                    print("Error:", e)
+
         
 
     def _handle_game_step(self):
