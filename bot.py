@@ -5,6 +5,8 @@ import time
 from constants import *
 from detector import Detector
 from emulator import Emulator
+from basenstreamer import baseNBinaryStreamer
+from message_handler import char_map
 
 pause_event = threading.Event()
 pause_event.set()
@@ -15,6 +17,7 @@ is_resumed_logged = True
 class Bot:
     is_paused_logged = False
     is_resumed_logged = True
+    streamer : baseNBinaryStreamer
 
     def __init__(self):
         self.message_queue = []
@@ -24,6 +27,7 @@ class Bot:
 
         self.emulator = Emulator("emulator-5554", "127.0.0.1")
         self.detector = Detector()
+        self.streamer = baseNBinaryStreamer(224)
         self.state = None
         self.play_action_delay = 0.1
         self.should_run = True
@@ -79,6 +83,7 @@ class Bot:
         self.set_state()
         self._handle_game_step()
         self.decode_clock_positions()
+        
 
     def _handle_game_step(self):
         if len(self.state.ready) == 0 or len(self.message_queue) == 0:
@@ -101,7 +106,7 @@ class Bot:
             if (p.tile_x, p.tile_y) not in ENEMY_TILES:
                 print("Found invalid clock at: "+str(p.tile_x)+" "+str(p.tile_y))
                 continue
-            self.incoming_message_queue.append(ENEMY_TILES.index((p.tile_x, p.tile_y)))
+            self.streamer.push(ENEMY_TILES.index((p.tile_x, p.tile_y)))
 
         self.previous_clock_positions = self.state.clock_positions.copy()
         
@@ -109,8 +114,10 @@ class Bot:
         self.message_queue += new_data
 
     def fetch_received_data(self):
-        output = self.incoming_message_queue.copy()
-        self.incoming_message_queue = []
+        output = ""
+        while self.streamer.get_highest_safe_bit() >= 5:
+            output += char_map[self.streamer.pop_n(5)]
+        
         return output
 
     def run(self):
@@ -123,7 +130,3 @@ class Bot:
 
     def stop(self):
         self.should_run = False
-
-
-test = Bot()
-test.run()
