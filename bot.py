@@ -106,11 +106,10 @@ class Bot:
         #print(res)
         if res["new_data"]:
             binary =""
-            for c in res["message"]:
+            for c in res["message"][::-1]:
                 val = list(char_map.keys())[list(char_map.values()).index(c)]
                 bits = bin(val)[2:].zfill(5)
                 binary += bits
-        
             self.message_queue.extend(to_base_n(int(binary, 2), 224))
             print(self.message_queue)
 
