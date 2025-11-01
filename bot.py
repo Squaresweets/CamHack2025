@@ -24,6 +24,8 @@ class Bot:
         self.message_queue = []
         self.incoming_message_queue = []
 
+        self.handle_game_step_counter = 0
+
         self.position_last_trigger_time = {}
         self.position_cooldown = 1.5  # 1.5 second cooldown
 
@@ -83,7 +85,10 @@ class Bot:
         #self._handle_play_pause_in_step()
 
         self.set_state()
-        self._handle_game_step()
+        self.handle_game_step_counter += 1
+        if self.handle_game_step_counter == 50:
+            self._handle_game_step()
+            self.handle_game_step_counter = 0;
         self.decode_clock_positions()
 
         str = self.fetch_received_data()
