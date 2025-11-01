@@ -64,6 +64,6 @@ form.addEventListener("submit", (e) => {
   sendMessage(txt);
 });
 
-appendMessage("Hello! How can I assist you today?", "bot", currentId);
+appendMessage("", "bot", currentId);
 
 input.focus();
