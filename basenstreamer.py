@@ -2,9 +2,12 @@ from typing import List, Optional
 
 def lowest_set_bit(v : int) -> int:
     i = 0
-    while (1 << i) & v == 0:
-        i += 1
-    return i
+    if v == 0:
+        return -1
+    
+    lsb_value = v & -v
+    
+    return lsb_value.bit_length() - 1
 
 def to_base_n(value: int, base: int) -> list[int]:
     if base < 2:
@@ -40,47 +43,27 @@ def from_base_n(digits: list[int], base: int) -> int:
     return result
 
 
+import math
+from typing import Optional
+
 class baseNBinaryStreamer:
-    baseN_values : List[int]
-    base : int
+    offset : int = 0
+    num : int = 0
+    base : int = 0
+    curr : int = 0
 
     def __init__(self, base):
-        self.base = base;
-        self.baseN_values = []
+        self.base = base
 
-    def push(self, value : int):
-        self.baseN_values.append(value)
+    def push(self, val : int):
+        self.num += (val * (self.base ** self.curr))
+        self.curr += 1
 
-    def get_highest_safe_bit(self) -> int:
-        return lowest_set_bit(self.base ** max(len(self.baseN_values) - 1, 0))
-    
+    def highest_safe(self):
+        return lowest_set_bit(self.base ** self.curr) - self.offset
 
-    def seek_n(self, n : int) -> Optional[int]:
-        if n > self.get_highest_safe_bit():
-            return None
-        
-        return from_base_n(self.baseN_values, self.base) & ((1 << n) - 1)
-    
+    def pop_n(self, n : int):
+        val = (self.num & (((1 << n) - 1) << self.offset)) >> self.offset
+        self.offset += n
+        return val
 
-    def pop_n(self, n : int) -> Optional[int]:
-        if n > self.get_highest_safe_bit():
-            return None
-        
-        val = from_base_n(self.baseN_values, self.base) 
-        seek_value = self.seek_n(n)
-
-        val >>= n
-
-        self.baseN_values = to_base_n(val, self.base)
-        if len(self.baseN_values) == 1 and self.baseN_values[0] == 0:
-            self.baseN_values.remove(0)
-
-        return seek_value
-    
-
-
-            
-
-        
-
-        
