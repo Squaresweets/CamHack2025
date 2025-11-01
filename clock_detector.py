@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from constants import DISPLAY_HEIGHT, DISPLAY_WIDTH, TILE_HEIGHT, TILE_INIT_X, TILE_INIT_Y, TILE_WIDTH
+from constants import *
 from state import Position
 
 
@@ -8,9 +8,9 @@ class ClockDetector:
 
     @staticmethod
     def _get_tile_xy(x, y):
-        tile_x = round(((x - TILE_INIT_X) / TILE_WIDTH) - 0.5)
+        tile_x = round(((x * DISPLAY_WIDTH / SCREENSHOT_WIDTH - TILE_INIT_X) / TILE_WIDTH) - 0.5)
         tile_y = round(
-            ((DISPLAY_HEIGHT - TILE_INIT_Y - y) / TILE_HEIGHT) - 0.5
+            ((DISPLAY_HEIGHT - TILE_INIT_Y - y * DISPLAY_HEIGHT / SCREENSHOT_HEIGHT) / TILE_HEIGHT) - 0.5
         )
         return tile_x, tile_y
 
@@ -31,7 +31,7 @@ class ClockDetector:
 
         # Display the image with bounding boxes and dots
         cv2.imshow("Detected Clocks with Dots", image)
-        cv2.waitKey(0)
+        #cv2.waitKey(0)
 
     @staticmethod
     def identify_clocks(image):
