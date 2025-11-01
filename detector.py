@@ -17,13 +17,6 @@ class Detector:
     DECK_SIZE = 8
 
     def __init__(self, cards):
-        if len(cards) != self.DECK_SIZE:
-            raise WikifiedError(
-                "005", f"You must specify all {self.DECK_SIZE} of your cards"
-            )
-
-        self.cards = deepcopy(cards)
-
         self.card_detector = ReadyDetector()
         self.clock_detector = ClockDetector(os.path.join(MODELS_DIR, "units_M_480x352.onnx"))
 

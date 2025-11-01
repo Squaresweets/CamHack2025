@@ -5,25 +5,9 @@ import time
 import keyboard
 from loguru import logger
 
-from clashroyalebuildabot.constants import ALL_TILES
-from clashroyalebuildabot.constants import ALLY_TILES
-from clashroyalebuildabot.constants import DISPLAY_CARD_DELTA_X
-from clashroyalebuildabot.constants import DISPLAY_CARD_HEIGHT
-from clashroyalebuildabot.constants import DISPLAY_CARD_INIT_X
-from clashroyalebuildabot.constants import DISPLAY_CARD_WIDTH
-from clashroyalebuildabot.constants import DISPLAY_CARD_Y
-from clashroyalebuildabot.constants import DISPLAY_HEIGHT
-from clashroyalebuildabot.constants import LEFT_PRINCESS_TILES
-from clashroyalebuildabot.constants import RIGHT_PRINCESS_TILES
-from clashroyalebuildabot.constants import TILE_HEIGHT
-from clashroyalebuildabot.constants import TILE_INIT_X
-from clashroyalebuildabot.constants import TILE_INIT_Y
-from clashroyalebuildabot.constants import TILE_WIDTH
-from clashroyalebuildabot.detectors.detector import Detector
-from clashroyalebuildabot.emulator.emulator import Emulator
-from clashroyalebuildabot.namespaces import Screens
-from clashroyalebuildabot.visualizer import Visualizer
-from error_handling import WikifiedError
+from constants import *
+from detector import Detector
+from emulator import Emulator
 
 pause_event = threading.Event()
 pause_event.set()
@@ -35,35 +19,15 @@ class Bot:
     is_paused_logged = False
     is_resumed_logged = True
 
-    def __init__(self, actions, config):
-        self.actions = actions
-        self.auto_start = config["bot"]["auto_start_game"]
-        self.end_of_game_clicked = False
-        self.bypass_end_of_game_clicked = False
-        self.should_run = True
-
+    def __init__(self, config):
         self.message_queue = []
-
-        cards = [action.CARD for action in actions]
-        if len(cards) != 8:
-            raise WikifiedError(
-                "005", f"Must provide 8 cards but {len(cards)} was given"
-            )
-        self.cards_to_actions = dict(zip(cards, actions))
+        self.incoming_message_queue = []
 
         self.visualizer = Visualizer(**config["visuals"])
         self.emulator = Emulator(**config["adb"])
-        self.detector = Detector(cards=cards)
+        self.detector = Detector()
         self.state = None
         self.play_action_delay = config.get("ingame", {}).get("play_action", 1)
-
-        keyboard_thread = threading.Thread(
-            target=self._handle_keyboard_shortcut, daemon=True
-        )
-        keyboard_thread.start()
-
-        if config["bot"]["load_deck"]:
-            self.emulator.load_deck(cards)
 
     @staticmethod
     def _log_and_wait(prefix, delay):
@@ -73,25 +37,6 @@ class Bot:
         message = f"{prefix}. Waiting for {delay} second{suffix}."
         logger.info(message)
         time.sleep(delay)
-
-    @staticmethod
-    def _handle_keyboard_shortcut():
-        while True:
-            keyboard.wait("ctrl+p")
-            Bot.pause_or_resume()
-
-    @staticmethod
-    def pause_or_resume():
-        if pause_event.is_set():
-            logger.info("Bot paused.")
-            pause_event.clear()
-            Bot.is_paused_logged = True
-            Bot.is_resumed_logged = False
-        else:
-            logger.info("Bot resumed.")
-            pause_event.set()
-            Bot.is_resumed_logged = True
-            Bot.is_paused_logged = False
 
     @staticmethod
     def _get_nearest_tile(x, y):
@@ -117,14 +62,6 @@ class Bot:
         y = DISPLAY_CARD_Y + DISPLAY_CARD_HEIGHT / 2
         return x, y
 
-    def _get_valid_tiles(self):
-        tiles = ALLY_TILES
-        if self.state.numbers.left_enemy_princess_hp.number == 0:
-            tiles += LEFT_PRINCESS_TILES
-        if self.state.numbers.right_enemy_princess_hp.number == 0:
-            tiles += RIGHT_PRINCESS_TILES
-        return tiles
-
     def set_state(self):
         screenshot = self.emulator.take_screenshot()
         self.state = self.detector.run(screenshot)
@@ -136,69 +73,38 @@ class Bot:
         self.emulator.click(*card_centre)
         self.emulator.click(*tile_centre)
 
-    def _handle_play_pause_in_step(self):
-        if not pause_event.is_set():
-            if not Bot.is_paused_logged:
-                logger.info("Bot paused.")
-                Bot.is_paused_logged = True
-            time.sleep(0.2)
-            return
-        if not Bot.is_resumed_logged:
-            logger.info("Bot resumed.")
-            Bot.is_resumed_logged = True
-
     def step(self):
         self._handle_play_pause_in_step()
-        old_screen = self.state.screen if self.state else None
+
         self.set_state()
-        new_screen = self.state.screen
-        if new_screen != old_screen:
-            logger.info(f"New screen state: {new_screen}")
-
-        if new_screen == Screens.UNKNOWN:
-            self._log_and_wait("Unknown screen", 2)
-            return
-
-        if new_screen == Screens.END_OF_GAME:
-            if not self.end_of_game_clicked:
-                self.emulator.click(*self.state.screen.click_xy)
-                self.end_of_game_clicked = True
-                self._log_and_wait("Clicked END_OF_GAME screen", 2)
-            return
-        self.end_of_game_clicked = False
-
-        if new_screen == Screens.BYPASS_END_OF_GAME:
-            if not self.bypass_end_of_game_clicked:
-                self.emulator.click(*self.state.screen.click_xy)
-                self.bypass_end_of_game_clicked = True
-                self._log_and_wait("Clicked BYPASS_END_OF_GAME screen", 2)
-            return
-        self.bypass_end_of_game_clicked = False
-
-        if self.auto_start and new_screen == Screens.LOBBY:
-            self.emulator.click(*self.state.screen.click_xy)
-            self._log_and_wait("Starting game", 2)
-            return
-
         self._handle_game_step()
+        self.decode_clock_positions()
 
     def _handle_game_step(self):
-        actions = self.get_actions()
-
         if len(self.state.ready) == 0 or len(message_queue) == 0:
             self._log_and_wait("No actions available", self.play_action_delay)
             return
 
-        pos = convert_pos(message_queue.pop())
-        self.play_action(ready[0], *pos) #Need to convert here!
+        #This is the core logic!
+        pos = ALLY_TILES[message_queue.pop()]
+        self.play_action(ready[0], *pos)
 
         self._log_and_wait(
             f"Sent data!",
             self.play_action_delay,
         )
 
+    def decode_clock_positions(self):
+        for p in self.state.clock_positions:
+            self.incoming_message_queue.add(ENEMY_TILES.indexof((p.tile_x, p.tile_y))
+        
     def enqeue_data(self, new_data):
         self.message_queue += new_data
+
+    def fetch_recieved_data(self):
+        output = self.incoming_message_queue.copy()
+        self.incoming_message_queue = []
+        return output
 
     def run(self):
         try:
