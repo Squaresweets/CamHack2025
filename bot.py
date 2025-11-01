@@ -27,7 +27,10 @@ class Bot:
         self.handle_game_step_counter = 0
 
         self.position_last_trigger_time = {}
-        self.position_cooldown = 1.5  # 1.5 second cooldown
+        self.position_cooldown = 2  # 1.5 second cooldown
+
+        self.ready_last_place_time = {}
+        self.ready_cooldown = 0.2
 
         self.emulator = Emulator("emulator-5554", "127.0.0.1")
         self.detector = Detector()
@@ -85,10 +88,7 @@ class Bot:
         #self._handle_play_pause_in_step()
 
         self.set_state()
-        self.handle_game_step_counter += 1
-        if self.handle_game_step_counter == 50:
-            self._handle_game_step()
-            self.handle_game_step_counter = 0;
+        self._handle_game_step()
         self.decode_clock_positions()
 
         str = self.fetch_received_data()
@@ -121,14 +121,21 @@ class Bot:
             #self._log_and_wait("No actions available", self.play_action_delay)
             return
 
-        #This is the core logic!
-        pos = ALLY_TILES[self.message_queue.pop()]
-        self.play_action(self.state.ready[0], *pos)
+        # Trigger first ready, then return
+        for ready in self.state.ready:
+            if self._can_trigger_ready(ready):
+                # This is the core logic!
+                pos = ALLY_TILES[self.message_queue.pop()]
 
-        self._log_and_wait(
-            f"Sent data!",
-            self.play_action_delay,
-        )
+                self.play_action(ready, *pos)
+
+                self._log_and_wait(
+                    f"Sent data!",
+                    self.play_action_delay,
+                )
+                return
+
+
 
     def _can_trigger_position(self, tile_x, tile_y):
         """Check if a position can trigger based on cooldown timer"""
@@ -143,6 +150,16 @@ class Bot:
 
         # Update last trigger time
         self.position_last_trigger_time[position_key] = current_time
+        return True
+
+    def _can_trigger_ready(self, ready):
+        current_time = time.time()
+        if ready in self.ready_last_place_time:
+            time_since_last_place = current_time - self.ready_last_place_time[ready]
+            if time_since_last_place < self.ready_cooldown:
+                return False
+
+        self.ready_last_place_time[ready] = current_time
         return True
 
     def decode_clock_positions(self):
