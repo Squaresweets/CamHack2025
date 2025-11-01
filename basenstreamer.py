@@ -59,7 +59,7 @@ class baseNBinaryStreamer:
         self.num += (val * (self.base ** self.curr))
         self.curr += 1
 
-    def highest_safe(self):
+    def get_highest_safe_bit(self):
         return lowest_set_bit(self.base ** self.curr) - self.offset
 
     def pop_n(self, n : int):
