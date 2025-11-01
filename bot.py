@@ -23,6 +23,8 @@ class Bot:
         self.message_queue = []
         self.incoming_message_queue = []
 
+        self.previous_clock_positions = []
+
         self.visualizer = Visualizer(**config["visuals"])
         self.emulator = Emulator(**config["adb"])
         self.detector = Detector()
@@ -96,7 +98,10 @@ class Bot:
 
     def decode_clock_positions(self):
         for p in self.state.clock_positions:
+            if p in self.previous_clock_positions:
+                continue
             self.incoming_message_queue.add(ENEMY_TILES.indexof((p.tile_x, p.tile_y))
+        self.previous_clock_positions = self.state.clock_positions.copy()
         
     def enqeue_data(self, new_data):
         self.message_queue += new_data

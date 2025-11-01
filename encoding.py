@@ -1,16 +1,16 @@
-def to_base226(n):
+def to_base224(n):
     if n == 0:
         return [0]
     b = []
     while n > 0:
-        b.append(n % 226)
-        n //= 226
+        b.append(n % 224)
+        n //= 224
     return b[::-1]
 
-def from_base226(digits):
+def from_base224(digits):
     n = 0
     for x in digits:
-        n = n * 226 + x
+        n = n * 224 + x
     return n
 
 char_to_val = {**{chr(97+i): i for i in range(26)}, ' ':27, ',':28, '.':29, '?':30, '!':31}
@@ -23,11 +23,11 @@ def encode_to_tiles(s):
     v = to_values(s)
     bits = ''.join(f'{x:05b}' for x in v)
     n = int(bits, 2)
-    tiles = to_base226(n)
+    tiles = to_base224(n)
     return tiles
 
 def decode_from_tiles(tiles): 
-    n = from_base226(tiles)
+    n = from_base224(tiles)
     bits = bin(n)[2:]
     pad = (-len(bits)) % 5
     bits = '0'*pad + bits
