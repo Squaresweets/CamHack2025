@@ -31,6 +31,7 @@ def generate_reply(message: str) -> str:
     return f"Echo: {message}"
 
 
+
 @app.route("/", methods=["GET"])
 def index():
     return render_template("index.html")
@@ -40,6 +41,7 @@ def index():
 def chat():
     data = request.get_json(force=True)
     message = data.get("message", "")
+    latest_message = message
     reply = generate_reply(message)
     return jsonify({"reply": reply})
 
@@ -52,6 +54,15 @@ def check_for_updates():
         data = latest_char
         latest_char = None  # clear after sending (optional)
         return jsonify(new_data=True, chars=data)
+    return jsonify(new_data=False)
+
+@app.route('/check_new_message', methods=['GET'])
+def check_new_message():
+    global latest_message
+    if latest_message:
+        data = latest_message
+        latest_message = None  # clear after sending (optional)
+        return jsonify(new_data=True, message=data)
     return jsonify(new_data=False)
 
 

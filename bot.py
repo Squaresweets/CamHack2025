@@ -1,10 +1,13 @@
 import random
 import threading
 import time
+import requests
 
 from constants import *
 from detector import Detector
 from emulator import Emulator
+from basenstreamer import baseNBinaryStreamer, to_base_n
+from message_handler import char_map
 
 pause_event = threading.Event()
 pause_event.set()
@@ -15,6 +18,8 @@ is_resumed_logged = True
 class Bot:
     is_paused_logged = False
     is_resumed_logged = True
+    streamer : baseNBinaryStreamer
+    emote_queue = []
 
     def __init__(self):
         self.message_queue = []
@@ -25,6 +30,7 @@ class Bot:
 
         self.emulator = Emulator("emulator-5554", "127.0.0.1")
         self.detector = Detector()
+        self.streamer = baseNBinaryStreamer(224)
         self.state = None
         self.play_action_delay = 0.1
         self.should_run = True
@@ -81,6 +87,30 @@ class Bot:
         self._handle_game_step()
         self.decode_clock_positions()
 
+        str = self.fetch_received_data()
+        if str != "":
+            BASE_URL = "http://127.0.0.1:5000/newchar"
+            for char in str:
+                url = f"{BASE_URL}/{char}"
+                try:
+                    res = requests.get(url)
+                except Exception as e:
+                    print("Error:", e)
+
+
+        res = requests.get("http://127.0.0.1:5000/check_new_message")
+        if res.new_data:
+            binary =""
+            for c in res.message:
+                val = list(char_map.keys())[list(char_map.values()).index(c)]
+                bits = bin(val)[2:].zfill(5)
+                binary += bits
+
+            self.emote_queue.extend(to_base_n(int(binary, 2), 224))
+
+
+
+
     def _handle_game_step(self):
         if len(self.state.ready) == 0 or len(self.message_queue) == 0:
             #self._log_and_wait("No actions available", self.play_action_delay)
@@ -112,8 +142,7 @@ class Bot:
 
     def decode_clock_positions(self):
         for p in self.state.clock_positions:
-            if not self._can_trigger_position(p.tile_x, p.tile_y):
-                #print(f"Position ({p.tile_x}, {p.tile_y}) on cooldown, skipping")
+            if p in self.previous_clock_positions:
                 continue
             if (p.tile_x, p.tile_y) not in ENEMY_TILES:
                 print("Found invalid clock at: "+str(p.tile_x)+" "+str(p.tile_y))
@@ -122,15 +151,18 @@ class Bot:
             seconds = int(current_time % 60)
             milliseconds = int((current_time % 1) * 1000)
             print(f"{p.tile_x} {p.tile_y}, {seconds}.{milliseconds:03d}")
-            self.incoming_message_queue.append(ENEMY_TILES.index((p.tile_x, p.tile_y)))
+
+            self.streamer.push(ENEMY_TILES.index((p.tile_x, p.tile_y)))
 
         
     def enqueue_data(self, new_data):
         self.message_queue += new_data
 
     def fetch_received_data(self):
-        output = self.incoming_message_queue.copy()
-        self.incoming_message_queue = []
+        output = ""
+        while self.streamer.get_highest_safe_bit() >= 5:
+            output += char_map[self.streamer.pop_n(5)]
+
         return output
 
     def run(self):
@@ -143,7 +175,3 @@ class Bot:
 
     def stop(self):
         self.should_run = False
-
-
-test = Bot()
-test.run()
