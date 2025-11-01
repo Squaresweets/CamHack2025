@@ -52,7 +52,7 @@ class baseNBinaryStreamer:
         self.baseN_values.append(value)
 
     def get_highest_safe_bit(self) -> int:
-        return lowest_set_bit(self.base ** len(self.baseN_values))
+        return lowest_set_bit(self.base ** max(len(self.baseN_values) - 1, 0))
     
 
     def seek_n(self, n : int) -> Optional[int]:
