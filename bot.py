@@ -20,7 +20,8 @@ class Bot:
         self.message_queue = []
         self.incoming_message_queue = []
 
-        self.previous_clock_positions = []
+        self.position_last_trigger_time = {}
+        self.position_cooldown = 1.5  # 1.5 second cooldown
 
         self.emulator = Emulator("emulator-5554", "127.0.0.1")
         self.detector = Detector()
@@ -94,16 +95,35 @@ class Bot:
             self.play_action_delay,
         )
 
+    def _can_trigger_position(self, tile_x, tile_y):
+        """Check if a position can trigger based on cooldown timer"""
+        current_time = time.time()
+        position_key = (tile_x, tile_y)
+
+        # Check if position has been triggered before
+        if position_key in self.position_last_trigger_time:
+            time_since_last_trigger = current_time - self.position_last_trigger_time[position_key]
+            if time_since_last_trigger < self.position_cooldown:
+                return False
+
+        # Update last trigger time
+        self.position_last_trigger_time[position_key] = current_time
+        return True
+
     def decode_clock_positions(self):
         for p in self.state.clock_positions:
-            if p in self.previous_clock_positions:
+            if not self._can_trigger_position(p.tile_x, p.tile_y):
+                #print(f"Position ({p.tile_x}, {p.tile_y}) on cooldown, skipping")
                 continue
             if (p.tile_x, p.tile_y) not in ENEMY_TILES:
                 print("Found invalid clock at: "+str(p.tile_x)+" "+str(p.tile_y))
                 continue
+            current_time = time.time()
+            seconds = int(current_time % 60)
+            milliseconds = int((current_time % 1) * 1000)
+            print(f"{p.tile_x} {p.tile_y}, {seconds}.{milliseconds:03d}")
             self.incoming_message_queue.append(ENEMY_TILES.index((p.tile_x, p.tile_y)))
 
-        self.previous_clock_positions = self.state.clock_positions.copy()
         
     def enqueue_data(self, new_data):
         self.message_queue += new_data

@@ -14,7 +14,7 @@ class ClockDetector:
     def _get_screenshot_tile_xy(x, y):
         tile_x = round(((x * DISPLAY_WIDTH / SCREENSHOT_WIDTH - TILE_INIT_X) / TILE_WIDTH) - 0.5)
         tile_y = round(
-            ((DISPLAY_HEIGHT - TILE_INIT_Y - y * DISPLAY_HEIGHT / SCREENSHOT_HEIGHT) / TILE_HEIGHT) - 0.5
+            ((DISPLAY_HEIGHT - TILE_INIT_Y - y * DISPLAY_HEIGHT / SCREENSHOT_HEIGHT) / TILE_HEIGHT) - 0.3
         )
         return tile_x, tile_y
 
@@ -44,7 +44,7 @@ class ClockDetector:
             raise ValueError("Invalid image provided.")
 
         image = cv2.cvtColor(np.array(_image), cv2.COLOR_RGB2BGR)
-        cv2.imwrite("clock_detector.png", image)
+        #cv2.imwrite("clock_detector.png", image)
         #print(image)
         # Convert to HSV color space
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -71,13 +71,22 @@ class ClockDetector:
 
         # Prevent overtime detection
         # Calculate bounds for the middle 95% of the width
-        image_width = image.shape[1]
-        lower_bound = int(image_width * 0.025)
-        upper_bound = int(image_width * 0.975)
 
-        # Zero out pixels outside the middle 95% of the width
-        red_mask[:, :lower_bound] = 0
-        red_mask[:, upper_bound:] = 0
+        left_percent = 0.03  # 4%
+        right_percent = 0.97  # 96%
+        top_percent = 0.05  # 0%
+        bottom_percent = 0.5  # 100%
+
+        left_bound = int(SCREENSHOT_WIDTH * left_percent)
+        right_bound = int(SCREENSHOT_WIDTH * right_percent)
+        top_bound = int(SCREENSHOT_HEIGHT * top_percent)
+        bottom_bound = int(SCREENSHOT_HEIGHT * bottom_percent)
+
+        # Zero out pixels outside the bounds
+        red_mask[:, :left_bound] = 0  # Zero left side
+        red_mask[:, right_bound:] = 0  # Zero right side
+        red_mask[:top_bound, :] = 0  # Zero top
+        red_mask[bottom_bound:, :] = 0  # Zero bottom
 
         # Find contours in the mask
         contours, _ = cv2.findContours(red_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -91,7 +100,7 @@ class ClockDetector:
             if area > MIN_AREA:
                 x, y, w, h = cv2.boundingRect(contour)
                 center_x, top_y = x + w/2, y
-                print("center_x, top_y", center_x, top_y)
+                #print("center_x, top_y", center_x, top_y)
                 tile_x, tile_y = ClockDetector._get_screenshot_tile_xy(center_x, top_y)
                 position = Position(tile_x, tile_y)
                 clocks.append(position)
