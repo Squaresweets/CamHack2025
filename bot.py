@@ -19,7 +19,6 @@ class Bot:
     is_paused_logged = False
     is_resumed_logged = True
     streamer : baseNBinaryStreamer
-    emote_queue = []
 
     def __init__(self):
         self.message_queue = []
@@ -74,9 +73,9 @@ class Bot:
         screenshot = self.emulator.take_screenshot()
         self.state = self.detector.run(screenshot)
 
-    def play_action(self, index, position):
+    def play_action(self, index, tile_x, tile_y):
         card_centre = self._get_card_centre(index)
-        tile_centre = self._get_tile_centre(position.tile_x, position.tile_y)
+        tile_centre = self._get_tile_centre(tile_x, tile_y)
         self.emulator.click(*card_centre)
         self.emulator.click(*tile_centre)
 
@@ -98,18 +97,20 @@ class Bot:
                     print("Error:", e)
 
 
-        res = requests.get("http://127.0.0.1:5000/check_new_message")
-        if res.new_data:
+        res = requests.get("http://127.0.0.1:5000/check_new_message").json()
+        print(res)
+        if res["new_data"]:
             binary =""
-            for c in res.message:
+            for c in res["message"]:
                 val = list(char_map.keys())[list(char_map.values()).index(c)]
                 bits = bin(val)[2:].zfill(5)
                 binary += bits
+        
+            self.message_queue.extend(to_base_n(int(binary, 2), 224))
+            print(self.message_queue)
 
-            self.emote_queue.extend(to_base_n(int(binary, 2), 224))
 
-
-
+        
 
     def _handle_game_step(self):
         if len(self.state.ready) == 0 or len(self.message_queue) == 0:
@@ -175,3 +176,6 @@ class Bot:
 
     def stop(self):
         self.should_run = False
+
+test = Bot()
+test.run()

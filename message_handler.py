@@ -68,9 +68,4 @@ def check_complete_char():
                 print(f"Failed to send {char}: {res.status_code}")
         except Exception as e:
             print("Error:", e)
-
-while True:
-    
-    line = input()
-    add_bits(line)
     

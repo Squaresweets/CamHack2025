@@ -5,7 +5,7 @@ import random
 app = Flask(__name__, static_folder="static", template_folder="templates")
 CORS(app)
 latest_char = None
-
+latest_message = None
 def generate_reply(message: str) -> str:
     """Very small, deterministic-ish reply generator for the demo.
     This is intentionally lightweight and doesn't depend on external services.
@@ -39,6 +39,7 @@ def index():
 
 @app.route("/chat", methods=["POST"])
 def chat():
+    global latest_message
     data = request.get_json(force=True)
     message = data.get("message", "")
     latest_message = message
