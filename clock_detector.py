@@ -1,73 +1,78 @@
-import os
-
+import cv2
 import numpy as np
-
-from clashroyalebuildabot.constants import DETECTOR_UNITS
-from clashroyalebuildabot.constants import DISPLAY_HEIGHT
-from clashroyalebuildabot.constants import DISPLAY_WIDTH
-from clashroyalebuildabot.constants import MODELS_DIR
-from clashroyalebuildabot.constants import SCREENSHOT_HEIGHT
-from clashroyalebuildabot.constants import SCREENSHOT_WIDTH
-from clashroyalebuildabot.constants import TILE_HEIGHT
-from clashroyalebuildabot.constants import TILE_INIT_X
-from clashroyalebuildabot.constants import TILE_INIT_Y
-from clashroyalebuildabot.constants import TILE_WIDTH
-from clashroyalebuildabot.detectors.onnx_detector import OnnxDetector
-from clashroyalebuildabot.detectors.side_detector import SideDetector
-from clashroyalebuildabot.namespaces.units import Position
-from clashroyalebuildabot.namespaces.units import UnitDetection
+from constants import DISPLAY_HEIGHT, DISPLAY_WIDTH, TILE_HEIGHT, TILE_INIT_X, TILE_INIT_Y, TILE_WIDTH
+from state import Position
 
 
-class ClockDetector(OnnxDetector):
-    MIN_CONF = 0.3
-    UNIT_Y_START = 0.05
-    UNIT_Y_END = 0.80
-
-    def __init__(self, model_path):
-        super().__init__(model_path)
+class ClockDetector:
 
     @staticmethod
-    def _get_tile_xy(bbox):
-        x = (bbox[0] + bbox[2]) * DISPLAY_WIDTH / (2 * SCREENSHOT_WIDTH)
-        y = bbox[3] * DISPLAY_HEIGHT / SCREENSHOT_HEIGHT
+    def _get_tile_xy(x, y):
         tile_x = round(((x - TILE_INIT_X) / TILE_WIDTH) - 0.5)
         tile_y = round(
             ((DISPLAY_HEIGHT - TILE_INIT_Y - y) / TILE_HEIGHT) - 0.5
         )
         return tile_x, tile_y
 
-    def _preprocess(self, image):
-        image = image.crop(
-            (
-                0,
-                self.UNIT_Y_START * image.height,
-                image.width,
-                self.UNIT_Y_END * image.height,
-            )
-        )
-        image, padding = self.resize_pad_transpose_and_scale(image)
-        image = np.expand_dims(image, axis=0)
-        return image, padding
+    @staticmethod
+    def draw_bounding_boxes(image, contours):
+        for contour in contours:
+            x, y, w, h = cv2.boundingRect(contour)
 
-    def _post_process(self, pred, height, image):
-        pred[:, [1, 3]] *= self.UNIT_Y_END - self.UNIT_Y_START
-        pred[:, [1, 3]] += self.UNIT_Y_START * height
+            # Draw the bounding box
+            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+            # Draw dots for the corners and center
+            corners = [(x, y), (x + w, y), (x, y + h), (x + w, y + h)]
+            center = (x + w // 2, y + h // 2)
+            for corner in corners:
+                cv2.circle(image, corner, 5, (255, 0, 0), -1)  # Blue dots for corners
+            cv2.circle(image, center, 5, (0, 0, 255), -1)  # Red dot for center
+
+        # Display the image with bounding boxes and dots
+        cv2.imshow("Detected Clocks with Dots", image)
+        cv2.waitKey(0)
+
+    @staticmethod
+    def identify_clocks(image):
+        MIN_AREA = 10
+        if image is None:
+            raise ValueError("Invalid image provided.")
+
+        # Convert to HSV color space
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+        # Define vibrant red color range in HSV
+        # lower_red1 = np.array([0, 190, 240])
+        # upper_red1 = np.array([5, 210, 255])
+        # lower_red2 = np.array([175, 190, 240])
+        # upper_red2 = np.array([180, 210, 255])
+
+        lower_red1 = np.array([0, 190, 240])
+        upper_red1 = np.array([5, 210, 255])
+        lower_red2 = np.array([175, 190, 240])
+        upper_red2 = np.array([180, 210, 255])
+
+        # Create masks for red
+        mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
+        mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
+        red_mask = mask1 | mask2
+
+        # Find contours in the mask
+        contours, _ = cv2.findContours(red_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        # Optional: Draw bounding boxes and dots (can be commented out later)
+        ClockDetector.draw_bounding_boxes(image, contours)
 
         clocks = []
-        for p in pred:
-            l, t, r, b, conf, cls = p
-            bbox = (round(l), round(t), round(r), round(b))
-            tile_x, tile_y = self._get_tile_xy(bbox)
-            position = Position(tile_x, tile_y)
-            clocks.append(position)
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            if area > MIN_AREA:
+                x, y, w, h = cv2.boundingRect(contour)
+                center_x, top_y = x + w/2, y
+                print("center_x, top_y", center_x, top_y)
+                tile_x, tile_y = ClockDetector._get_tile_xy(center_x, top_y)
+                position = Position(tile_x, tile_y)
+                clocks.append(position)
 
-        return clocks
-
-    def run(self, image):
-        height, width = image.height, image.width
-        np_image, padding = self._preprocess(image)
-        pred = self._infer(np_image)[0]
-        pred = pred[pred[:, 4] > self.MIN_CONF]
-        pred = self.fix_bboxes(pred, width, height, padding)
-        clocks = self._post_process(pred, height, image)
         return clocks
