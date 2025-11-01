@@ -22,5 +22,24 @@
     </main>
 
     <script src="/static/main.js"></script>
+    <audio autoplay muted loop hidden>
+      <source
+        src="{{ url_for('static', filename='drillclash.mp3') }}"
+        type="audio/mpeg"
+      />
+    </audio>
+
+    <script>
+      // unmute & play once user interacts
+      document.addEventListener(
+        "click",
+        () => {
+          const audio = document.querySelector("audio");
+          audio.muted = false;
+          audio.play();
+        },
+        { once: true }
+      );
+    </script>
   </body>
 </html>
