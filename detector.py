@@ -4,21 +4,17 @@ import time
 
 from loguru import logger
 
-from clashroyalebuildabot.constants import MODELS_DIR
-from clashroyalebuildabot.detectors.card_detector import CardDetector
-from clashroyalebuildabot.detectors.number_detector import NumberDetector
-from clashroyalebuildabot.detectors.screen_detector import ScreenDetector
-from clashroyalebuildabot.detectors.unit_detector import UnitDetector
-from clashroyalebuildabot.namespaces import State
-from error_handling import WikifiedError
+from constants import *
+from ready_detector import ReadyDetector
+from clock_detector import  ClockDetector
+from state import *
 
 
 class Detector:
     DECK_SIZE = 8
 
-    def __init__(self, cards):
+    def __init__(self):
         self.card_detector = ReadyDetector()
-        self.clock_detector = ClockDetector(os.path.join(MODELS_DIR, "units_M_480x352.onnx"))
 
     def run(self, image):
         logger.debug("Setting state...")
@@ -26,7 +22,7 @@ class Detector:
         for attempt in range(retries):
             try:
                 ready = self.card_detector.run(image)
-                clock_positions = self.clock_detector.run(image)
+                clock_positions = ClockDetector.identify_clocks(image)
                 
                 state = State(ready, clock_positions)
                 return state

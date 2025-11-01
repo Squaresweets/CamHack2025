@@ -14,12 +14,7 @@ from PIL.Image import Image
 import requests
 from tqdm import tqdm
 
-from clashroyalebuildabot.constants import ADB_DIR
-from clashroyalebuildabot.constants import ADB_PATH
-from clashroyalebuildabot.constants import EMULATOR_DIR
-from clashroyalebuildabot.constants import SCREENSHOT_HEIGHT
-from clashroyalebuildabot.constants import SCREENSHOT_WIDTH
-from error_handling import WikifiedError
+from constants import *
 
 
 class Emulator:
@@ -69,9 +64,9 @@ class Emulator:
                 ]
 
                 if not available_devices:
-                    raise WikifiedError(
+                    logger.error(
                         "006", "No connected devices found"
-                    ) from e
+                    )
 
                 fallback_device_serial = available_devices[0]
                 logger.info(
@@ -82,9 +77,9 @@ class Emulator:
                 logger.error(
                     f"Failed to execute adb devices: {str(adb_error)}"
                 )
-                raise WikifiedError(
+                logger.error(
                     "006", "Could not find a valid device to connect to."
-                ) from adb_error
+                )
 
     def _start_recording(self):
         cmd = (
@@ -155,13 +150,13 @@ class Emulator:
             logger.error(str(e))
             logger.error(f"stdout: {e.stdout}")
             logger.error(f"stderr: {e.stderr}")
-            raise WikifiedError("007", "ADB command failed.") from e
+            logger.error("007", "ADB command failed.")
 
         if result.returncode != 0:
             logger.error(f"Error executing command: {result.stderr}")
-            raise WikifiedError(
+            logger.error(
                 "007", "ADB command failed."
-            ) from RuntimeError(result.stderr)
+            )
 
         return result.stdout
 

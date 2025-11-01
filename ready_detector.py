@@ -4,9 +4,7 @@ import numpy as np
 from PIL import Image
 from scipy.optimize import linear_sum_assignment
 
-from clashroyalebuildabot.constants import CARD_CONFIG
-from clashroyalebuildabot.namespaces.cards import Cards
-from error_handling import WikifiedError
+from constants import CARD_CONFIG
 
 
 class ReadyDetector:

@@ -2,9 +2,6 @@ import random
 import threading
 import time
 
-import keyboard
-from loguru import logger
-
 from constants import *
 from detector import Detector
 from emulator import Emulator
@@ -19,17 +16,17 @@ class Bot:
     is_paused_logged = False
     is_resumed_logged = True
 
-    def __init__(self, config):
+    def __init__(self):
         self.message_queue = []
         self.incoming_message_queue = []
 
         self.previous_clock_positions = []
 
-        self.visualizer = Visualizer(**config["visuals"])
-        self.emulator = Emulator(**config["adb"])
+        self.emulator = Emulator("emulator-5554", "127.0.0.1")
         self.detector = Detector()
         self.state = None
-        self.play_action_delay = config.get("ingame", {}).get("play_action", 1)
+        self.play_action_delay = 1
+        self.should_run = True
 
     @staticmethod
     def _log_and_wait(prefix, delay):
@@ -37,7 +34,7 @@ class Bot:
         if delay > 1:
             suffix = "s"
         message = f"{prefix}. Waiting for {delay} second{suffix}."
-        logger.info(message)
+        print(message)
         time.sleep(delay)
 
     @staticmethod
@@ -67,7 +64,6 @@ class Bot:
     def set_state(self):
         screenshot = self.emulator.take_screenshot()
         self.state = self.detector.run(screenshot)
-        self.visualizer.run(screenshot, self.state)
 
     def play_action(self, index, position):
         card_centre = self._get_card_centre(index)
@@ -76,20 +72,20 @@ class Bot:
         self.emulator.click(*tile_centre)
 
     def step(self):
-        self._handle_play_pause_in_step()
+        #self._handle_play_pause_in_step()
 
         self.set_state()
         self._handle_game_step()
         self.decode_clock_positions()
 
     def _handle_game_step(self):
-        if len(self.state.ready) == 0 or len(message_queue) == 0:
+        if len(self.state.ready) == 0 or len(self.message_queue) == 0:
             self._log_and_wait("No actions available", self.play_action_delay)
             return
 
         #This is the core logic!
-        pos = ALLY_TILES[message_queue.pop()]
-        self.play_action(ready[0], *pos)
+        pos = ALLY_TILES[self.message_queue.pop()]
+        self.play_action(self.state.ready[0], *pos)
 
         self._log_and_wait(
             f"Sent data!",
@@ -100,13 +96,13 @@ class Bot:
         for p in self.state.clock_positions:
             if p in self.previous_clock_positions:
                 continue
-            self.incoming_message_queue.add(ENEMY_TILES.indexof((p.tile_x, p.tile_y))
+            self.incoming_message_queue.append(ENEMY_TILES.indexof((p.tile_x, p.tile_y)))
         self.previous_clock_positions = self.state.clock_positions.copy()
         
-    def enqeue_data(self, new_data):
+    def enqueue_data(self, new_data):
         self.message_queue += new_data
 
-    def fetch_recieved_data(self):
+    def fetch_received_data(self):
         output = self.incoming_message_queue.copy()
         self.incoming_message_queue = []
         return output
@@ -119,9 +115,13 @@ class Bot:
                     continue
 
                 self.step()
-            logger.info("Thanks for using CRBAB, see you next time!")
+            print("Thanks for using CRBAB, see you next time!")
         except KeyboardInterrupt:
-            logger.info("Thanks for using CRBAB, see you next time!")
+            print("Thanks for using CRBAB, see you next time!")
 
     def stop(self):
         self.should_run = False
+
+
+test = Bot()
+test.run()

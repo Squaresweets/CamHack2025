@@ -5,3 +5,6 @@
 .xml
 .vs
 duy.py
+platform-tools/
+.idea/
+__pycache__/
