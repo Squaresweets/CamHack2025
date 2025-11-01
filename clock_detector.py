@@ -2,6 +2,10 @@ import cv2
 import numpy as np
 from constants import *
 from state import Position
+import platform
+
+# Detect operating system
+os_name = platform.system()
 
 
 class ClockDetector:
@@ -45,17 +49,20 @@ class ClockDetector:
         # Convert to HSV color space
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-        # Define vibrant red color range in HSV
-        # lower_red1 = np.array([0, 190, 240])
-        # upper_red1 = np.array([5, 210, 255])
-        # lower_red2 = np.array([175, 190, 240])
-        # upper_red2 = np.array([180, 210, 255])
-
-        # Tweaked for mac
-        lower_red1 = np.array([0, 210, 235])
-        upper_red1 = np.array([5, 255, 255])
-        lower_red2 = np.array([175, 210, 235])
-        upper_red2 = np.array([180, 255, 255])
+        if os_name == "Darwin":  # macOS
+            # Tweaked for mac
+            lower_red1 = np.array([0, 210, 235])
+            upper_red1 = np.array([5, 255, 255])
+            lower_red2 = np.array([175, 210, 235])
+            upper_red2 = np.array([180, 255, 255])
+        elif os_name == "Windows":
+            # Windows ranges
+            lower_red1 = np.array([0, 190, 240])
+            upper_red1 = np.array([5, 210, 255])
+            lower_red2 = np.array([175, 190, 240])
+            upper_red2 = np.array([180, 210, 255])
+        else:
+            raise ValueError("Invalid operating system.")
 
         # Create masks for red
         mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
