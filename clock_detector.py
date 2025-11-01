@@ -58,7 +58,7 @@ class ClockDetector(OnnxDetector):
             l, t, r, b, conf, cls = p
             bbox = (round(l), round(t), round(r), round(b))
             tile_x, tile_y = self._get_tile_xy(bbox)
-            position = Position(bbox, conf, tile_x, tile_y)
+            position = Position(tile_x, tile_y)
             clocks.append(position)
 
         return clocks
