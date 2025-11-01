@@ -25,7 +25,7 @@ class Bot:
         self.emulator = Emulator("emulator-5554", "127.0.0.1")
         self.detector = Detector()
         self.state = None
-        self.play_action_delay = 1
+        self.play_action_delay = 0.1
         self.should_run = True
 
     @staticmethod
@@ -39,6 +39,8 @@ class Bot:
 
     @staticmethod
     def _get_nearest_tile(x, y):
+        # Note, this is x and y in device coords, not screenshot coords
+        # If in screenshot coords, must resize first
         tile_x = round(((x - TILE_INIT_X) / TILE_WIDTH) - 0.5)
         tile_y = round(
             ((DISPLAY_HEIGHT - TILE_INIT_Y - y) / TILE_HEIGHT) - 0.5
@@ -80,7 +82,7 @@ class Bot:
 
     def _handle_game_step(self):
         if len(self.state.ready) == 0 or len(self.message_queue) == 0:
-            self._log_and_wait("No actions available", self.play_action_delay)
+            #self._log_and_wait("No actions available", self.play_action_delay)
             return
 
         #This is the core logic!
@@ -114,10 +116,6 @@ class Bot:
     def run(self):
         try:
             while self.should_run:
-                if not pause_event.is_set():
-                    time.sleep(0.1)
-                    continue
-
                 self.step()
             print("Thanks for using CRBAB, see you next time!")
         except KeyboardInterrupt:

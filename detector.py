@@ -3,6 +3,7 @@ import os
 import time
 
 from loguru import logger
+logger._min_level = 30
 
 from constants import *
 from ready_detector import ReadyDetector
@@ -17,7 +18,7 @@ class Detector:
         self.card_detector = ReadyDetector()
 
     def run(self, image):
-        logger.debug("Setting state...")
+        #logger.debug("Setting state...")
         retries = 3
         for attempt in range(retries):
             try:

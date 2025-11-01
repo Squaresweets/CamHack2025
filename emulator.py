@@ -231,7 +231,7 @@ class Emulator:
         self._run_command(["shell", "input", "tap", str(x), str(y)])
 
     def take_screenshot(self) -> Image:
-        logger.debug("Starting to take screenshot...")
+        #logger.debug("Starting to take screenshot...")
         while self.frame is None:
             time.sleep(0.01)
             continue

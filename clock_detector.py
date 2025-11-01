@@ -7,7 +7,7 @@ from state import Position
 class ClockDetector:
 
     @staticmethod
-    def _get_tile_xy(x, y):
+    def _get_screenshot_tile_xy(x, y):
         tile_x = round(((x * DISPLAY_WIDTH / SCREENSHOT_WIDTH - TILE_INIT_X) / TILE_WIDTH) - 0.5)
         tile_y = round(
             ((DISPLAY_HEIGHT - TILE_INIT_Y - y * DISPLAY_HEIGHT / SCREENSHOT_HEIGHT) / TILE_HEIGHT) - 0.5
@@ -73,7 +73,7 @@ class ClockDetector:
                 x, y, w, h = cv2.boundingRect(contour)
                 center_x, top_y = x + w/2, y
                 print("center_x, top_y", center_x, top_y)
-                tile_x, tile_y = ClockDetector._get_tile_xy(center_x, top_y)
+                tile_x, tile_y = ClockDetector._get_screenshot_tile_xy(center_x, top_y)
                 position = Position(tile_x, tile_y)
                 clocks.append(position)
 
