@@ -103,7 +103,7 @@ class Bot:
 
 
         res = requests.get("http://127.0.0.1:5000/check_new_message").json()
-        print(res)
+        #print(res)
         if res["new_data"]:
             binary =""
             for c in res["message"]:
@@ -148,7 +148,7 @@ class Bot:
 
     def decode_clock_positions(self):
         for p in self.state.clock_positions:
-            if p in self.previous_clock_positions:
+            if not self._can_trigger_position(p.tile_x, p.tile_y):
                 continue
             if (p.tile_x, p.tile_y) not in ENEMY_TILES:
                 print("Found invalid clock at: "+str(p.tile_x)+" "+str(p.tile_y))
