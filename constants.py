@@ -27,24 +27,28 @@ N_HEIGHT_TILES = 15
 N_WIDE_TILES = 18
 TILE_INIT_X = 52
 TILE_INIT_Y = 296
-ALLY_TILES = [[x, 0] for x in range(N_WIDE_TILES // 3, 2 * N_WIDE_TILES // 3)]
+LEFT_PRINCESS_TILES = [
+    (x, y)
+    for x in range(2,5)
+    for y in range(5,8)
+]
+RIGHT_PRINCESS_TILES = [
+    (x, y)
+    for x in range(13, 16)
+    for y in range(5, 8)
+]
+KING_TILES = [
+    (x, y)
+    for x in range(7, 11)
+    for y in range(1, 5)
+]
+ALLY_TILES = [(x, 0) for x in range(N_WIDE_TILES // 3, 2 * N_WIDE_TILES // 3)]
 ALLY_TILES += [
-    [x, y] for x in range(N_WIDE_TILES) for y in range(1, N_HEIGHT_TILES)
+    (x, y) for x in range(N_WIDE_TILES) for y in range(1, N_HEIGHT_TILES) if (x, y) not in (LEFT_PRINCESS_TILES + RIGHT_PRINCESS_TILES + KING_TILES)
 ]
-ENEMY_TILES = [[17 - x, 31 - y] for x, y in ALLY_TILES]
+ENEMY_TILES = [(17 - x, 31 - y) for x, y in ALLY_TILES]
 ALL_TILES = ALLY_TILES + ENEMY_TILES
-LEFT_PRINCESS_TILES = [[3, N_HEIGHT_TILES], [3, N_HEIGHT_TILES + 1]]
-LEFT_PRINCESS_TILES += [
-    [x, y]
-    for x in range(N_WIDE_TILES // 2)
-    for y in range(N_HEIGHT_TILES + 2, N_HEIGHT_TILES + 6)
-]
-RIGHT_PRINCESS_TILES = [[14, N_HEIGHT_TILES], [14, N_HEIGHT_TILES + 1]]
-RIGHT_PRINCESS_TILES += [
-    [x, y]
-    for x in range(N_WIDE_TILES // 2, N_WIDE_TILES)
-    for y in range(N_HEIGHT_TILES + 2, N_HEIGHT_TILES + 6)
-]
+
 DISPLAY_CARD_Y = 1067
 DISPLAY_CARD_INIT_X = 164
 DISPLAY_CARD_WIDTH = 117
