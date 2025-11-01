@@ -143,9 +143,9 @@ class Emulator:
                 text=True,
             )
             end_time = time.time()
-            logger.debug(
-                f"Command executed in {end_time - start_time} seconds"
-            )
+            #logger.debug(
+            #    f"Command executed in {end_time - start_time} seconds"
+            #)
         except subprocess.CalledProcessError as e:
             logger.error(str(e))
             logger.error(f"stdout: {e.stdout}")
@@ -228,6 +228,7 @@ class Emulator:
         )
 
     def click(self, x, y):
+        print("Clicking: " + str(x) + " " + str(y))
         self._run_command(["shell", "input", "tap", str(x), str(y)])
 
     def take_screenshot(self) -> Image:

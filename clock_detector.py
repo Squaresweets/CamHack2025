@@ -83,7 +83,7 @@ class ClockDetector:
         contours, _ = cv2.findContours(red_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         # Optional: Draw bounding boxes and dots (can be commented out later)
-        ClockDetector.draw_bounding_boxes(image, contours)
+        #ClockDetector.draw_bounding_boxes(image, contours)
 
         clocks = []
         for contour in contours:

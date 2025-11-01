@@ -72,7 +72,9 @@ class baseNBinaryStreamer:
         val >>= n
 
         self.baseN_values = to_base_n(val, self.base)
-        
+        if len(self.baseN_values) == 1 and self.baseN_values[0] == 0:
+            self.baseN_values.remove(0)
+
         return seek_value
     
 
