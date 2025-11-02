@@ -82,3 +82,35 @@ class baseNBinaryStreamer:
     def read_all_past_curr(self, stride : int):
         return [(self.num & (((1 << stride) - 1) << o)) >> o for o in range(self.offset,highest_set_bit(self.num), stride)]
 
+class chunkerStreamer:
+    chunks : List[int] = []
+
+    @staticmethod
+    def chunk_binary(binstr: str):
+        index = 0
+        chunks = []
+        while len(binstr) > 0:
+            if len(binstr) >= 8:
+                to_try_str = binstr[0:8]
+                to_try = int(to_try_str, 2)
+                if 224 >to_try >= 128:
+                    chunks.append(to_try)
+                    binstr = binstr[8:]
+                else:
+                    chunks.append(int(to_try_str[:-1], 2))
+                    binstr = binstr[7:]
+            elif len(binstr) == 7:
+                chunks.append(int(binstr, 2))
+                binstr = ""
+            else:
+                binstr = binstr.ljust(7, "0")
+                chunks.append(int(binstr, 2))
+                binstr = ""
+
+
+        return chunks
+    
+    def push(self, val):
+        self.chunks.append(val)
+
+        
