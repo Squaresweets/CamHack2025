@@ -103,7 +103,8 @@ class Bot:
 
         self.set_state()
         self._handle_game_step()
-        self.decode_clock_positions()
+        if self.state.screen.name == "in_game":
+            self.decode_clock_positions()
         
         data = self.streamer.pop_all()
 
