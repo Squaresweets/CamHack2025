@@ -156,6 +156,7 @@ class Bot:
         elif self.state.screen.name == "end_of_game":
             # Reset
             self.streamer.incoming_binary_string = ""
+            self.message_queue = []
 
             self.emulator.click(*self.state.screen.click_xy)
             time.sleep(.5)
