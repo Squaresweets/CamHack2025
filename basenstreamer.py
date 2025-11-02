@@ -48,7 +48,13 @@ class ChunkerStreamer:
         result = ""
         for i in range(num_chars):
             binary_char = self.incoming_binary_string[i*5:(i+1)*5]
-            result += char_map[int(binary_char, 2)]
+            curr_char = char_map[int(binary_char, 2)]
+            if curr_char == "]":
+                self.incoming_binary_string = ""
+                result += curr_char
+                break;
+
+            result += curr_char
         self.incoming_binary_string = self.incoming_binary_string[num_chars*5:]
         return result
 

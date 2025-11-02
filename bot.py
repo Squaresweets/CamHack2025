@@ -6,7 +6,7 @@ import requests
 from constants import *
 from detector import Detector
 from emulator import Emulator
-from basenstreamer import chunkerStreamer
+from basenstreamer import ChunkerStreamer
 from message_handler import char_map
 
 pause_event = threading.Event()
@@ -18,7 +18,7 @@ is_resumed_logged = True
 class Bot:
     is_paused_logged = False
     is_resumed_logged = True
-    streamer : chunkerStreamer
+    streamer : ChunkerStreamer
 
     def __init__(self):
         self.message_queue = []
@@ -35,7 +35,7 @@ class Bot:
 
         self.emulator = Emulator("emulator-5554", "127.0.0.1")
         self.detector = Detector()
-        self.streamer = chunkerStreamer()
+        self.streamer = ChunkerStreamer()
         self.state = None
         self.play_action_delay = 0.1
         self.should_run = True
@@ -85,7 +85,8 @@ class Bot:
         self.emulator.click(*card_centre)
         self.emulator.click(*tile_centre)
 
-    def str_to_bin(self, str_value):
+    @staticmethod
+    def str_to_bin(str_value):
         binary =""
         for c in str_value:
             val = list(char_map.keys())[list(char_map.values()).index(c)]
@@ -101,7 +102,7 @@ class Bot:
         self.decode_clock_positions()
         
         data = self.streamer.pop_all()
-        print(f"Data \"{data}\" (chunked format: {chunkerStreamer.chunk_binary(self.str_to_bin(data))}) just read")
+        print(f"Data \"{data}\" (chunked format: {ChunkerStreamer.chunk_binary(Bot.str_to_bin(data))}) just read")
         
         if data:
             BASE_URL = "http://127.0.0.1:5000/newchar"
@@ -118,10 +119,10 @@ class Bot:
         if res["new_data"]:
             binary = self.str_to_bin(res["message"])
 
-            self.message_queue.extend(chunkerStreamer.chunk_binary(binary))
+            self.message_queue.extend(ChunkerStreamer.chunk_binary(binary))
 
-            
-            print(f"Message \"{res["message"]}\" is loaded into the queue, current state: {self.message_queue}")
+
+            print(f"Message \"{res['message']}\" is loaded into the queue, current state: {self.message_queue}")
 
 
         
