@@ -137,12 +137,8 @@ class Bot:
                 if self._can_trigger_ready(ready):
                     # This is the core logic!
                     index = self.message_queue.pop(0)
-                    if index == -1:
-                        time.sleep(.2)
-                        self.send_emote()
-                    else:
-                        pos = ALLY_TILES[self.message_queue.pop(0)]
-                        self.play_action(ready, *pos)
+                    pos = ALLY_TILES[self.message_queue.pop(0)]
+                    self.play_action(ready, *pos)
 
                     self._log_and_wait(
                         f"Sent data!",
@@ -213,11 +209,6 @@ class Bot:
         #self.emulator.click(360, 1030)
         #time.sleep(delay*0.7)
         self.emulator.click(360, 1030)
-
-    def send_emote(self):
-        self.emulator.click(73, 1065)
-        time.sleep(0.05)
-        self.emulator.click(428, 1176)
         
     def enqueue_data(self, new_data):
         self.message_queue += new_data
