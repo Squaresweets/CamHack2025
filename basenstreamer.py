@@ -113,4 +113,11 @@ class chunkerStreamer:
     def push(self, val):
         self.chunks.append(val)
 
+    def pop_all(self) -> Optional[str]:
+        """Returns all avalible string if there is any, None if not"""
+        return
+    
+    def is_end(self) -> bool:
+        return False
+
         
