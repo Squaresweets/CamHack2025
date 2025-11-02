@@ -51,7 +51,11 @@ setInterval(async () => {
         console.log("New message detected");
         appendMessage("", "bot", ++currentId);
       } else {
-        appendCharacter(currentId, char);
+        if (currentId === 0) {
+          appendMessage(char, "bot", ++currentId);
+        } else {
+          appendCharacter(currentId, char);
+        }
       }
     }
   }
@@ -63,7 +67,5 @@ form.addEventListener("submit", (e) => {
   if (!txt) return;
   sendMessage(txt);
 });
-
-appendMessage("", "bot", currentId);
 
 input.focus();

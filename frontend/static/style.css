@@ -17,7 +17,11 @@ body {
     Roboto, "Helvetica Neue", Arial;
 }
 body {
-  background: linear-gradient(180deg, var(--bg), #071022);
+  background-image: url("/static/better_background.png");
+  background-repeat: repeat; /* tile the image */
+  background-size: 40%; /* use image’s natural size */
+  background-position: top left; /* start tiling from top-left corner */
+  background-attachment: fixed; /* optional – makes it stay in place while scrolling */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -26,7 +30,7 @@ body {
 .chat-card {
   width: 100%;
   max-width: 760px;
-  background: linear-gradient(180deg, var(--card), #07111a);
+  background: #e6eef8;
   border-radius: 14px;
   padding: 18px;
   box-shadow: 0 8px 30px rgba(2, 6, 23, 0.6);
@@ -35,15 +39,26 @@ body {
 }
 .chat-header {
   padding: 8px 6px 14px;
-  color: #e6eef8;
+  color: #b4b0b1;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* center children (logo, title, subtitle) */
+  text-align: center; /* center text inside header */
 }
 .chat-header h1 {
   margin: 0;
   font-size: 1.25rem;
 }
+.chat-header .logo {
+  width: 50%;
+  max-width: 50%;
+  height: auto;
+  display: block;
+  margin: 0 0 0.5rem 0;
+}
 .chat-header .muted {
   margin: 4px 0 0;
-  color: var(--muted);
+  color: #eba953;
   font-size: 0.9rem;
 }
 .messages {
@@ -69,21 +84,25 @@ body {
   border-radius: 12px;
   line-height: 1.25;
   font-size: 0.98rem;
+  /* allow long text to wrap to new lines instead of overflowing */
+  white-space: pre-wrap; /* preserve newlines, but still wrap */
+  overflow-wrap: anywhere; /* break long words/URLs when needed */
+  word-break: break-word; /* fallback for some browsers */
 }
 .msg.user {
   justify-content: flex-end;
 }
 .msg.user .bubble {
-  background: linear-gradient(90deg, var(--user), #38bdf8);
-  color: #04202a;
+  background: rgba(45, 96, 149, 0.8);
+  color: white;
   border-bottom-right-radius: 6px;
 }
 .msg.bot {
   justify-content: flex-start;
 }
 .msg.bot .bubble {
-  background: var(--bot);
-  color: #0c0714;
+  background: #f4be4c;
+  color: white;
   border-bottom-left-radius: 6px;
 }
 .composer {
@@ -91,20 +110,21 @@ body {
   gap: 8px;
   padding-top: 10px;
 }
+
 .composer input {
   flex: 1;
   padding: 12px 14px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   background: transparent;
-  color: #e6eef8;
+  color: black;
   outline: none;
 }
 .composer button {
   padding: 10px 14px;
   border-radius: 10px;
   border: 0;
-  background: var(--accent);
+  background: #f4be4c;
   color: white;
   cursor: pointer;
 }
