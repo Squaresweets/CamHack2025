@@ -7,7 +7,7 @@ from constants import IMAGES_DIR
 from screens import *
 
 class ScreenDetector:
-    def __init__(self, hash_size=8, threshold=30):
+    def __init__(self, hash_size=8, threshold=40):
         self.hash_size = hash_size
         self.threshold = threshold
         self.screen_hashes = self._calculate_screen_hashes()

@@ -32,10 +32,10 @@ class Bot:
         self.position_cooldown = 3  # 1.5 second cooldown
 
         self.ready_last_place_time = {}
-        self.ready_cooldown = 0.5
+        self.ready_cooldown = 1
 
         self.total_last_place_time = 0
-        self.place_cooldown = 0.3
+        self.place_cooldown = 2
 
         self.emulator = Emulator("emulator-5554", "127.0.0.1")
         self.detector = Detector()
@@ -141,7 +141,9 @@ class Bot:
                 return
 
             # Trigger first ready, then return
-            for ready in self.state.ready:
+            random_readies = self.state.ready.copy()
+            random.shuffle(random_readies)
+            for ready in random_readies:
                 if self._can_trigger_ready(ready):
                     # This is the core logic!
                     pos = ALLY_TILES[self.message_queue.pop(0)]
