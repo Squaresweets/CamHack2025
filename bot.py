@@ -6,7 +6,7 @@ import requests
 from constants import *
 from detector import Detector
 from emulator import Emulator
-from basenstreamer import baseNBinaryStreamer, to_base_n
+from basenstreamer import chunkerStreamer
 from message_handler import char_map
 
 pause_event = threading.Event()
@@ -18,7 +18,7 @@ is_resumed_logged = True
 class Bot:
     is_paused_logged = False
     is_resumed_logged = True
-    streamer : baseNBinaryStreamer
+    streamer : chunkerStreamer
 
     def __init__(self):
         self.message_queue = []
@@ -34,7 +34,7 @@ class Bot:
 
         self.emulator = Emulator("emulator-5554", "127.0.0.1")
         self.detector = Detector()
-        self.streamer = baseNBinaryStreamer(224)
+        self.streamer = chunkerStreamer()
         self.state = None
         self.play_action_delay = 0.1
         self.should_run = True
@@ -84,6 +84,14 @@ class Bot:
         self.emulator.click(*card_centre)
         self.emulator.click(*tile_centre)
 
+    def str_to_bin(self, str_value):
+        binary =""
+        for c in str_value:
+            val = list(char_map.keys())[list(char_map.values()).index(c)]
+            bits = bin(val)[2:].zfill(5)
+            binary += bits
+        return binary
+
     def step(self):
         #self._handle_play_pause_in_step()
 
@@ -91,16 +99,12 @@ class Bot:
         self._handle_game_step()
         self.decode_clock_positions()
         
-        terminated = False # for the others to add with emotes
-
-        (str, rest) = self.fetch_received_data()
-        if terminated:
-            str += rest
-            self.streamer = baseNBinaryStreamer(224)
+        data = self.streamer.pop_all()
+        print(f"Data \"{data}\" (chunked format: {chunkerStreamer.chunk_binary()}) just read")
         
-        if str != "":
+        if data:
             BASE_URL = "http://127.0.0.1:5000/newchar"
-            for char in str:
+            for char in data:
                 url = f"{BASE_URL}/{char}"
                 try:
                     res = requests.get(url)
@@ -111,16 +115,12 @@ class Bot:
         res = requests.get("http://127.0.0.1:5000/check_new_message").json()
         #print(res)
         if res["new_data"]:
-            res["message"].strip("]") # we are now deciding to not do terminating charecters and do them through emojis 
-            binary =""
-            for c in res["message"][::-1]:
-                val = list(char_map.keys())[list(char_map.values()).index(c)]
-                bits = bin(val)[2:].zfill(5)
-                binary += bits
-            self.message_queue.extend(to_base_n(int(binary, 2), 224))
+            binary = self.str_to_bin(res["message"])
+
+            self.message_queue.extend(chunkerStreamer.chunk_binary(binary))
 
             self.message_queue.append(-1)
-            print(self.message_queue)
+            print(f"Message \"{res["message"]}\" is loaded into the queue, current state: {self.message_queue}")
 
 
         
@@ -188,15 +188,6 @@ class Bot:
         
     def enqueue_data(self, new_data):
         self.message_queue += new_data
-
-    def fetch_received_data(self):
-        safe_output = ""
-        while self.streamer.get_highest_safe_bit() >= 5:
-            safe_output += char_map[self.streamer.pop_n(5)]
-
-        rest_unsafe = self.streamer.read_all_past_curr()
-
-        return (safe_output, rest_unsafe)
 
     def run(self):
         try:
