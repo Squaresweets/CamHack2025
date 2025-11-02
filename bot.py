@@ -31,6 +31,7 @@ class Bot:
 
         self.ready_last_place_time = {}
         self.ready_cooldown = 0.4
+        
 
         self.emulator = Emulator("emulator-5554", "127.0.0.1")
         self.detector = Detector()
