@@ -119,7 +119,7 @@ class Bot:
 
             self.message_queue.extend(chunkerStreamer.chunk_binary(binary))
 
-            self.message_queue.append(-1)
+            
             print(f"Message \"{res["message"]}\" is loaded into the queue, current state: {self.message_queue}")
 
 
