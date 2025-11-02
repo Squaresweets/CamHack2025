@@ -4,7 +4,7 @@ This is a small text-based chat demo using a lightweight Python/Flask backend th
 
 How to run
 
-1. Create a virtualenv and install dependencies (from `frontend/requirements.txt`):
+1. Create a virtualenv and install dependencies (from requirements.txt`):
 
 ```bash
 python3 -m venv .venv
