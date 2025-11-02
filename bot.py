@@ -204,10 +204,8 @@ class Bot:
         time.sleep(delay)
         self.emulator.click(569, 492)
         time.sleep(delay)
-        #self.emulator.swipe(452, 979, 349, 542, 3000)
-        #self.emulator.send_events("select_match")
-        #self.emulator.click(360, 1030)
-        #time.sleep(delay*0.7)
+        self.emulator.replay_events("select_match.sh")
+        #time.sleep(delay)
         self.emulator.click(360, 1030)
         
     def enqueue_data(self, new_data):

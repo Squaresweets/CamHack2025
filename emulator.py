@@ -232,8 +232,22 @@ class Emulator:
         self._run_command(["shell", "input", "tap", str(x), str(y)])
     def swipe(self, x1, y1, x2, y2, duration):
         self._run_command(["shell", "input", "swipe", str(x1), str(y1), str(x2), str(y2), str(duration)])
-    #def send_events(self):
-    #    self._run_command(["adb shell sh /sdcard/select_match.sh"])
+
+    def replay_events(self, filename: str, device="/dev/input/event4"):
+        filename = os.path.join(os.path.dirname(__file__), filename)
+        with open(filename, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                # Each line is expected like: sendevent /dev/input/event4 3 53 14712
+                parts = line.split()
+                # remove the first element if it's "sendevent" and device, keep only numbers
+                if parts[0] == "sendevent":
+                    cmd = ["shell", "sendevent"] + parts[1:]
+                else:
+                    cmd = ["shell"] + parts
+                self._run_command(cmd)
 
     def take_screenshot(self) -> Image:
         #logger.debug("Starting to take screenshot...")
