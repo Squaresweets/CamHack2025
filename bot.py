@@ -133,7 +133,7 @@ class Bot:
         
 
     def _handle_game_step(self):
-        print(self.state.screen.name)
+        #print(self.state.screen.name)
         if self.state.screen.name == "in_game":
             if len(self.state.ready) == 0 or len(self.message_queue) == 0 or time.time() - self.total_last_place_time < self.place_cooldown:
                 #self._log_and_wait("No actions available", self.play_action_delay)
@@ -143,7 +143,6 @@ class Bot:
             for ready in self.state.ready:
                 if self._can_trigger_ready(ready):
                     # This is the core logic!
-                    index = self.message_queue.pop(0)
                     pos = ALLY_TILES[self.message_queue.pop(0)]
                     self.play_action(ready, *pos)
 
