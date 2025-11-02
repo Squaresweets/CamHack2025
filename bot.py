@@ -100,7 +100,7 @@ class Bot:
         self.decode_clock_positions()
         
         data = self.streamer.pop_all()
-        print(f"Data \"{data}\" (chunked format: {chunkerStreamer.chunk_binary()}) just read")
+        print(f"Data \"{data}\" (chunked format: {chunkerStreamer.chunk_binary(self.str_to_bin(data))}) just read")
         
         if data:
             BASE_URL = "http://127.0.0.1:5000/newchar"
