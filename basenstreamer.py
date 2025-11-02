@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 def highest_set_bit(v: int) -> int:
     if v < 0:
         raise ValueError("Input must be a non-negative integer.")
@@ -10,7 +8,6 @@ def highest_set_bit(v: int) -> int:
     return v.bit_length() - 1
 
 def lowest_set_bit(v : int) -> int:
-    i = 0
     if v == 0:
         return -1
     
@@ -35,7 +32,7 @@ def to_base_n(value: int, base: int) -> list[int]:
         digits.append(remainder) 
         current_value //= base
 
-    return digits
+    return digits # Returns reversed, (LSB first)
 
 def from_base_n(digits: list[int], base: int) -> int:
     if base < 2:
@@ -51,9 +48,6 @@ def from_base_n(digits: list[int], base: int) -> int:
 
     return result
 
-
-import math
-from typing import Optional
 
 class baseNBinaryStreamer:
     offset : int = 0
