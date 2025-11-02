@@ -10,11 +10,11 @@ class ChunkerStreamer:
     def chunk_binary(binstr: str):
         chunks = []
         while len(binstr) > 0:
-            print(binstr)
+            #print(binstr)
             if len(binstr) >= 8:
                 to_try_str = binstr[0:8]
                 to_try = int(to_try_str, 2)
-                if 224 >to_try >= 128:
+                if 222 >to_try >= 128:
                     chunks.append(to_try)
                     binstr = binstr[8:]
                 else:

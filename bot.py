@@ -110,7 +110,7 @@ class Bot:
 
         
         if data:
-            print(f"Data \"{data}\" (chunked format: {ChunkerStreamer.chunk_binary(Bot.str_to_bin(data))}) just read")
+            print(f"Data \"{data}\"")
             BASE_URL = "http://127.0.0.1:5000/newchar"
             for char in data:
                 url = f"{BASE_URL}/{char}"

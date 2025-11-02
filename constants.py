@@ -44,7 +44,7 @@ KING_TILES = [
 ]
 ALLY_TILES = [(x, 0) for x in range(N_WIDE_TILES // 3, 2 * N_WIDE_TILES // 3)]
 ALLY_TILES += [
-    (x, y) for x in range(N_WIDE_TILES) for y in range(1, N_HEIGHT_TILES) if (x, y) not in (LEFT_PRINCESS_TILES + RIGHT_PRINCESS_TILES + KING_TILES)
+    (x, y) for x in range(N_WIDE_TILES) for y in range(1, N_HEIGHT_TILES) if (x, y) not in (LEFT_PRINCESS_TILES + RIGHT_PRINCESS_TILES + KING_TILES + [(0, 14), (17, 14)])
 ]
 ENEMY_TILES = [(17 - x, 31 - y) for x, y in ALLY_TILES]
 ALL_TILES = ALLY_TILES + ENEMY_TILES
