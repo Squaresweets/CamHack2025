@@ -90,8 +90,14 @@ class Bot:
         self.set_state()
         self._handle_game_step()
         self.decode_clock_positions()
+        
+        terminated = False # for the others to add with emotes
 
-        str = self.fetch_received_data()
+        (str, rest) = self.fetch_received_data()
+        if terminated:
+            str += rest
+            self.streamer = baseNBinaryStreamer(224)
+        
         if str != "":
             BASE_URL = "http://127.0.0.1:5000/newchar"
             for char in str:
@@ -181,11 +187,13 @@ class Bot:
         self.message_queue += new_data
 
     def fetch_received_data(self):
-        output = ""
+        safe_output = ""
         while self.streamer.get_highest_safe_bit() >= 5:
-            output += char_map[self.streamer.pop_n(5)]
+            safe_output += char_map[self.streamer.pop_n(5)]
 
-        return output
+        rest_unsafe = self.streamer.read_all_past_curr()
+
+        return (safe_output, rest_unsafe)
 
     def run(self):
         try:

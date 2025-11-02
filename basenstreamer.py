@@ -1,5 +1,14 @@
 from typing import List, Optional
 
+def highest_set_bit(v: int) -> int:
+    if v < 0:
+        raise ValueError("Input must be a non-negative integer.")
+
+    if v == 0:
+        return -1
+    
+    return v.bit_length() - 1
+
 def lowest_set_bit(v : int) -> int:
     i = 0
     if v == 0:
@@ -66,4 +75,10 @@ class baseNBinaryStreamer:
         val = (self.num & (((1 << n) - 1) << self.offset)) >> self.offset
         self.offset += n
         return val
+    
+    def read_all(self, stride : int):
+        return [(self.num & (((1 << stride) - 1) << o)) >> o for o in range(0,highest_set_bit(self.num), stride)]
+    
+    def read_all_past_curr(self, stride : int):
+        return [(self.num & (((1 << stride) - 1) << o)) >> o for o in range(self.offset,highest_set_bit(self.num), stride)]
 
