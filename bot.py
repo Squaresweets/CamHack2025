@@ -124,7 +124,12 @@ class Bot:
         res = requests.get("http://127.0.0.1:5000/check_new_message").json()
         #print(res)
         if res["new_data"]:
-            binary = self.str_to_bin(res["message"].lower())
+            msg = ""
+            for char in res["message"]: 
+                if char.lower() in char_map.values(): 
+                    msg += char.lower()
+                
+            binary = self.str_to_bin(msg)
 
             self.message_queue.extend(ChunkerStreamer.chunk_binary(binary))
 
