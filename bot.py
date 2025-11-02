@@ -34,6 +34,9 @@ class Bot:
         self.ready_last_place_time = {}
         self.ready_cooldown = 0.4
 
+        self.total_last_place_time = 0
+        self.place_cooldown = 2
+
         self.emulator = Emulator("emulator-5554", "127.0.0.1")
         self.detector = Detector()
         self.streamer = ChunkerStreamer()
@@ -132,7 +135,7 @@ class Bot:
     def _handle_game_step(self):
         print(self.state.screen.name)
         if self.state.screen.name == "in_game":
-            if len(self.state.ready) == 0 or len(self.message_queue) == 0:
+            if len(self.state.ready) == 0 or len(self.message_queue) == 0 or time.time() - self.total_last_place_time < self.place_cooldown:
                 #self._log_and_wait("No actions available", self.play_action_delay)
                 return
 
@@ -148,6 +151,7 @@ class Bot:
                         f"Sent data!",
                         self.play_action_delay,
                     )
+                    self.total_last_place_time = time.time()
                     return
         elif self.state.screen.name == "end_of_game":
             self.emulator.click(*self.state.screen.click_xy)
