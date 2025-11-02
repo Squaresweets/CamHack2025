@@ -20,9 +20,11 @@ class Bot:
     is_resumed_logged = True
     streamer : baseNBinaryStreamer
 
-    def __init__(self):
+    def __init__(self, player_num):
         self.message_queue = []
         self.incoming_message_queue = []
+
+        self.player_num = player_num
 
         self.handle_game_step_counter = 0
 
@@ -123,30 +125,41 @@ class Bot:
             print(self.message_queue)
 
 
-        
-
     def _handle_game_step(self):
-        if len(self.state.ready) == 0 or len(self.message_queue) == 0:
-            #self._log_and_wait("No actions available", self.play_action_delay)
-            return
-
-        # Trigger first ready, then return
-        for ready in self.state.ready:
-            if self._can_trigger_ready(ready):
-                # This is the core logic!
-                index = self.message_queue.pop(0)
-                if index == -1:
-                    self.send_emote()
-                else:
-                    pos = ALLY_TILES[self.message_queue.pop(0)]
-                    self.play_action(ready, *pos)
-
-                self._log_and_wait(
-                    f"Sent data!",
-                    self.play_action_delay,
-                )
+        print(self.state.screen.name)
+        if self.state.screen.name == "in_game":
+            if len(self.state.ready) == 0 or len(self.message_queue) == 0:
+                #self._log_and_wait("No actions available", self.play_action_delay)
                 return
 
+            # Trigger first ready, then return
+            for ready in self.state.ready:
+                if self._can_trigger_ready(ready):
+                    # This is the core logic!
+                    index = self.message_queue.pop(0)
+                    if index == -1:
+                        time.sleep(.2)
+                        self.send_emote()
+                    else:
+                        pos = ALLY_TILES[self.message_queue.pop(0)]
+                        self.play_action(ready, *pos)
+
+                    self._log_and_wait(
+                        f"Sent data!",
+                        self.play_action_delay,
+                    )
+                    return
+        elif self.state.screen.name == "end_of_game":
+            self.emulator.click(*self.state.screen.click_xy)
+            time.sleep(.5)
+        elif self.state.screen.name == "lobby":
+            self.emulator.click(446, 139)
+            time.sleep(.5)
+            if self.player_num == 1:
+                self.request_friendly_match()
+        elif self.state.screen.name == "can_accept_battle":
+            self.emulator.click(*self.state.screen.click_xy)
+            time.sleep(.5)
 
 
     def _can_trigger_position(self, tile_x, tile_y):
@@ -190,14 +203,15 @@ class Bot:
 
     def request_friendly_match(self):
         delay = 0.1
-        self.emulator.click(446, 139)
         time.sleep(delay)
         self.emulator.click(360, 411)
         time.sleep(delay)
         self.emulator.click(569, 492)
         time.sleep(delay)
-        self.emulator.swipe(452, 979, 452, 542, 700)
-        time.sleep(delay*0.7)
+        #self.emulator.swipe(452, 979, 349, 542, 3000)
+        #self.emulator.send_events("select_match")
+        #self.emulator.click(360, 1030)
+        #time.sleep(delay*0.7)
         self.emulator.click(360, 1030)
 
     def send_emote(self):
@@ -213,7 +227,7 @@ class Bot:
         while self.streamer.get_highest_safe_bit() >= 5:
             safe_output += char_map[self.streamer.pop_n(5)]
 
-        rest_unsafe = self.streamer.read_all_past_curr()
+        rest_unsafe = self.streamer.read_all_past_curr(5)
 
         return (safe_output, rest_unsafe)
 
@@ -228,5 +242,6 @@ class Bot:
     def stop(self):
         self.should_run = False
 
-test = Bot()
+player_num = input("Are you player 1 or player 2: ")
+test = Bot(1 if player_num == "1" else 2)
 test.run()

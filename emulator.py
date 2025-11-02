@@ -232,6 +232,8 @@ class Emulator:
         self._run_command(["shell", "input", "tap", str(x), str(y)])
     def swipe(self, x1, y1, x2, y2, duration):
         self._run_command(["shell", "input", "swipe", str(x1), str(y1), str(x2), str(y2), str(duration)])
+    #def send_events(self):
+    #    self._run_command(["adb shell sh /sdcard/select_match.sh"])
 
     def take_screenshot(self) -> Image:
         #logger.debug("Starting to take screenshot...")

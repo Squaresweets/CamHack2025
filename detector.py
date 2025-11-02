@@ -8,6 +8,7 @@ logger._min_level = 30
 from constants import *
 from ready_detector import ReadyDetector
 from clock_detector import  ClockDetector
+from screen_detector import  ScreenDetector
 from state import *
 
 
@@ -16,6 +17,7 @@ class Detector:
 
     def __init__(self):
         self.card_detector = ReadyDetector()
+        self.screen_detector = ScreenDetector()
 
     def run(self, image):
         #logger.debug("Setting state...")
@@ -24,8 +26,9 @@ class Detector:
             try:
                 ready = self.card_detector.run(image)
                 clock_positions = ClockDetector.identify_clocks(image)
+                screen = self.screen_detector.run(image)
                 
-                state = State(ready, clock_positions)
+                state = State(ready, clock_positions, screen)
                 return state
             except Exception as e:
                 logger.error(
