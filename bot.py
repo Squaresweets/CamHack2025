@@ -154,6 +154,9 @@ class Bot:
                     self.total_last_place_time = time.time()
                     return
         elif self.state.screen.name == "end_of_game":
+            # Reset
+            self.streamer.incoming_binary_string = ""
+
             self.emulator.click(*self.state.screen.click_xy)
             time.sleep(.5)
         elif self.state.screen.name == "lobby":

@@ -14,7 +14,7 @@ class ClockDetector:
     def _get_screenshot_tile_xy(x, y):
         tile_x = round(((x * DISPLAY_WIDTH / SCREENSHOT_WIDTH - TILE_INIT_X) / TILE_WIDTH) - 0.5)
         tile_y = round(
-            ((DISPLAY_HEIGHT - TILE_INIT_Y - y * DISPLAY_HEIGHT / SCREENSHOT_HEIGHT) / TILE_HEIGHT) - 0.4
+            ((DISPLAY_HEIGHT - TILE_INIT_Y - y * DISPLAY_HEIGHT / SCREENSHOT_HEIGHT) / TILE_HEIGHT) - 0.39
         )
         return tile_x, tile_y
 
@@ -40,6 +40,7 @@ class ClockDetector:
     @staticmethod
     def identify_clocks(_image):
         MIN_AREA = 10
+        MIN_HEIGHT = 7
         if _image is None:
             raise ValueError("Invalid image provided.")
 
@@ -99,6 +100,8 @@ class ClockDetector:
             area = cv2.contourArea(contour)
             if area > MIN_AREA:
                 x, y, w, h = cv2.boundingRect(contour)
+                if h < MIN_HEIGHT:
+                    continue
                 center_x, top_y = x + w/2, y
                 #print("center_x, top_y", center_x, top_y)
                 tile_x, tile_y = ClockDetector._get_screenshot_tile_xy(center_x, top_y)
