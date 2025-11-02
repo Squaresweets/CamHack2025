@@ -111,12 +111,15 @@ class Bot:
         res = requests.get("http://127.0.0.1:5000/check_new_message").json()
         #print(res)
         if res["new_data"]:
+            res["message"].strip("]") # we are now deciding to not do terminating charecters and do them through emojis 
             binary =""
             for c in res["message"][::-1]:
                 val = list(char_map.keys())[list(char_map.values()).index(c)]
                 bits = bin(val)[2:].zfill(5)
                 binary += bits
             self.message_queue.extend(to_base_n(int(binary, 2), 224))
+
+            self.message_queue.append(-1)
             print(self.message_queue)
 
 
