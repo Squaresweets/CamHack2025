@@ -27,7 +27,7 @@ class Bot:
         self.handle_game_step_counter = 0
 
         self.position_last_trigger_time = {}
-        self.position_cooldown = 2  # 1.5 second cooldown
+        self.position_cooldown = 3  # 1.5 second cooldown
 
         self.ready_last_place_time = {}
         self.ready_cooldown = 0.4
@@ -134,9 +134,12 @@ class Bot:
         for ready in self.state.ready:
             if self._can_trigger_ready(ready):
                 # This is the core logic!
-                pos = ALLY_TILES[self.message_queue.pop(0)]
-
-                self.play_action(ready, *pos)
+                index = self.message_queue.pop(0)
+                if index == -1:
+                    self.send_emote()
+                else:
+                    pos = ALLY_TILES[self.message_queue.pop(0)]
+                    self.play_action(ready, *pos)
 
                 self._log_and_wait(
                     f"Sent data!",
@@ -181,10 +184,26 @@ class Bot:
             current_time = time.time()
             seconds = int(current_time % 60)
             milliseconds = int((current_time % 1) * 1000)
-            print(f"{p.tile_x} {p.tile_y}, {seconds}.{milliseconds:03d}")
+            print(f"{p.tile_x} {p.tile_y}, {seconds}.{milliseconds:03d}, {ENEMY_TILES.index((p.tile_x, p.tile_y))}")
 
             self.streamer.push(ENEMY_TILES.index((p.tile_x, p.tile_y)))
 
+    def request_friendly_match(self):
+        delay = 0.1
+        self.emulator.click(446, 139)
+        time.sleep(delay)
+        self.emulator.click(360, 411)
+        time.sleep(delay)
+        self.emulator.click(569, 492)
+        time.sleep(delay)
+        self.emulator.swipe(452, 979, 452, 542, 700)
+        time.sleep(delay*0.7)
+        self.emulator.click(360, 1030)
+
+    def send_emote(self):
+        self.emulator.click(73, 1065)
+        time.sleep(0.05)
+        self.emulator.click(428, 1176)
         
     def enqueue_data(self, new_data):
         self.message_queue += new_data
