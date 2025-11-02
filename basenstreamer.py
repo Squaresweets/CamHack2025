@@ -1,78 +1,61 @@
-def highest_set_bit(v: int) -> int:
-    if v < 0:
-        raise ValueError("Input must be a non-negative integer.")
+from typing import List, Optional
 
-    if v == 0:
-        return -1
+from message_handler import *
+
+class ChunkerStreamer:
+    def __init__(self):
+        self.incoming_binary_string = ""
+
+    @staticmethod
+    def chunk_binary(binstr: str):
+        chunks = []
+        while len(binstr) > 0:
+            print(binstr)
+            if len(binstr) >= 8:
+                to_try_str = binstr[0:8]
+                to_try = int(to_try_str, 2)
+                if 224 >to_try >= 128:
+                    chunks.append(to_try)
+                    binstr = binstr[8:]
+                else:
+                    chunks.append(int(to_try_str[:-1], 2))
+                    binstr = binstr[7:]
+            elif len(binstr) == 7:
+                chunks.append(int(binstr, 2))
+                binstr = ""
+            else:
+                binstr = binstr.ljust(7, "0")
+                chunks.append(int(binstr, 2))
+                binstr = ""
+
+
+        return chunks
     
-    return v.bit_length() - 1
+    def push(self, val):
+        if val < 128:
+            binary_val = bin(val)[2:].zfill(7)
+        else:
+            binary_val = bin(val)[2:].zfill(8)
 
-def lowest_set_bit(v : int) -> int:
-    if v == 0:
-        return -1
-    
-    lsb_value = v & -v
-    
-    return lsb_value.bit_length() - 1
+        self.incoming_binary_string += str(binary_val)
 
-def to_base_n(value: int, base: int) -> list[int]:
-    if base < 2:
-        raise ValueError("Base must be an integer of 2 or greater.")
-    if value < 0:
-        raise ValueError("Value must be non-negative.")
+    def pop_all(self) -> Optional[str]:
+        """Returns all available string if there is any, None if not"""
 
-    if value == 0:
-        return [0]
+        num_chars = len(self.incoming_binary_string)//5
+        if num_chars == 0:
+            return None
+        result = ""
+        for i in range(num_chars):
+            binary_char = self.incoming_binary_string[i*5:(i+1)*5]
+            curr_char = char_map[int(binary_char, 2)]
+            if curr_char == "]":
+                self.incoming_binary_string = ""
+                result += curr_char
+                break;
 
-    digits = []
-    current_value = value
-    
-    while current_value > 0:
-        remainder = current_value % base
-        digits.append(remainder) 
-        current_value //= base
+            result += curr_char
+        self.incoming_binary_string = self.incoming_binary_string[num_chars*5:]
+        return result
 
-    return digits # Returns reversed, (LSB first)
-
-def from_base_n(digits: list[int], base: int) -> int:
-    if base < 2:
-        raise ValueError("Base must be an integer of 2 or greater.")
-    if not all(0 <= d < base for d in digits):
-        raise ValueError("All digits must be less than the base.")
-
-    result = 0
-    
-    for i, digit in enumerate(digits):
-        exponent = i
-        result += digit * (base ** exponent)
-
-    return result
-
-
-class baseNBinaryStreamer:
-    offset : int = 0
-    num : int = 0
-    base : int = 0
-    curr : int = 0
-
-    def __init__(self, base):
-        self.base = base
-
-    def push(self, val : int):
-        self.num += (val * (self.base ** self.curr))
-        self.curr += 1
-
-    def get_highest_safe_bit(self):
-        return lowest_set_bit(self.base ** self.curr) - self.offset
-
-    def pop_n(self, n : int):
-        val = (self.num & (((1 << n) - 1) << self.offset)) >> self.offset
-        self.offset += n
-        return val
-    
-    def read_all(self, stride : int):
-        return [(self.num & (((1 << stride) - 1) << o)) >> o for o in range(0,highest_set_bit(self.num), stride)]
-    
-    def read_all_past_curr(self, stride : int):
-        return [(self.num & (((1 << stride) - 1) << o)) >> o for o in range(self.offset,highest_set_bit(self.num), stride)]
-
+        
