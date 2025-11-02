@@ -86,6 +86,7 @@ class Bot:
     def play_action(self, index, tile_x, tile_y):
         card_centre = self._get_card_centre(index)
         tile_centre = self._get_tile_centre(tile_x, tile_y)
+        print(f"Tile x: {tile_x}, Tile y: {tile_y}")
         self.emulator.click(*card_centre)
         self.emulator.click(*tile_centre)
 
