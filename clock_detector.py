@@ -40,7 +40,7 @@ class ClockDetector:
     @staticmethod
     def identify_clocks(_image):
         MIN_AREA = 10
-        MIN_HEIGHT = 7
+        MIN_HEIGHT = 10
         if _image is None:
             raise ValueError("Invalid image provided.")
 
@@ -101,6 +101,9 @@ class ClockDetector:
             if area > MIN_AREA:
                 x, y, w, h = cv2.boundingRect(contour)
                 if h < MIN_HEIGHT:
+                    continue
+                ratio = w / h
+                if ratio < 0.8 or ratio > 1.25:
                     continue
                 center_x, top_y = x + w/2, y
                 #print("center_x, top_y", center_x, top_y)
